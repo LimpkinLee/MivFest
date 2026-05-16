@@ -79,14 +79,14 @@ async def on_message(message):
 
     if message_lower == "!værsteboard":
         if not stats:
-            await message.channel.send("Ingen har sagt miv endnu! Tavsheden er øredøvende.")
+            await message.channel.send("So no miv? Good. Fred i verden.")
             return
             
         sorted_users = sorted(stats.items(), key=lambda item: item[1]["count"], reverse=True)
         
         leaderboard_text = "**🏆 DU ER DEN VÆRSTE 🏆**\n"
         for i, (uid, info) in enumerate(sorted_users[:10], start=1):
-            leaderboard_text += f"{i}. {info['name']}: {info['count']} gange\n"
+            leaderboard_text += f"{i}. {info['name']}: {info['count']} gang(e)\n"
         
         await message.channel.send(leaderboard_text)
         return
@@ -94,7 +94,7 @@ async def on_message(message):
     if "aldrig miv" in message_lower:
         current_count = stats[user_id]["count"]
         # RETTET: String-citationstegn her lavede fejl før
-        await message.channel.send(f"Editor's Note: {username} har in fact sagt miv {current_count} gang(e).")
+        await message.channel.send(f"Editor's Note: {username} har, in fact, sagt miv {current_count} gang(e).")
         return
 
     # Finder kun bogstaverne m, i, v i rækkefølge
@@ -120,7 +120,7 @@ async def on_message(message):
         save_data(stats)
         
         total_count = stats[user_id]["count"]
-        await message.channel.send(f'{username} har nu sagt miv {total_count} gange.')
+        await message.channel.send(f'{username} har nu sagt miv {total_count} gang(e).')
 
 # Hent token sikkert fra Renders indstillinger
 TOKEN = os.environ.get("DISCORD_TOKEN")
