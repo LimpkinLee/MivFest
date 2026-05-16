@@ -10,12 +10,11 @@ import discord
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
-        self.send_header('Content-type', 'text/plain')
+        self.send_header('Content-type', 'text/plain; charset=utf-8')
         self.end_headers()
-        self.wfile.write(b"MivBot er i live!")
+        self.wfile.write("MivBot er i live!".encode('utf-8'))
 
 def run_webserver():
-    # Render giver os automatisk en PORT variabel, ellers bruger vi 10000
     port = int(os.environ.get("PORT", 10000))
     server = HTTPServer(('0.0.0.0', port), SimpleHTTPRequestHandler)
     print(f"Webserver startede på port {port}")
@@ -29,18 +28,26 @@ intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
+# Hvis du har tilføjet en 'Persistent Disk' på Render på stien /data, 
+# så ændr denne variabel til: "/data/miv_stats.json"
 DATA_FILE = "miv_stats.json"
 miv_history = {}
 
 def load_data():
     if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+        try:
+            with open(DATA_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            return {}
     return {}
 
 def save_data(data):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
+    try:
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+    except Exception as e:
+        print(f"Kunne ikke gemme data: {e}")
 
 @client.event
 async def on_ready():
@@ -65,12 +72,16 @@ async def on_message(message):
         if username.lower() == "limpkinlee":
             stats = {}
             save_data(stats)
-            await message.channel.send( "**Fred i verden, alle miv-scorer er nu blevet nulstillet af LimpkinLee!**")
+            await message.channel.send("**Fred i verden, alle miv-scorer er nu blevet nulstillet af LimpkinLee!**")
         else:
             await message.channel.send("Alas, kun **LimpkinLee** har magten til at nulstille pointen. Whomp^2")
         return
 
     if message_lower == "!værsteboard":
+        if not stats:
+            await message.channel.send("Ingen har sagt miv endnu! Tavsheden er øredøvende.")
+            return
+            
         sorted_users = sorted(stats.items(), key=lambda item: item[1]["count"], reverse=True)
         
         leaderboard_text = "**🏆 DU ER DEN VÆRSTE 🏆**\n"
@@ -82,9 +93,11 @@ async def on_message(message):
 
     if "aldrig miv" in message_lower:
         current_count = stats[user_id]["count"]
-        await message.channel.send(f'Editor's Note: {username} har in fact sagt miv {current_count} gang(e).')
+        # RETTET: String-citationstegn her lavede fejl før
+        await message.channel.send(f"Editor's Note: {username} har in fact sagt miv {current_count} gang(e).")
         return
 
+    # Finder kun bogstaverne m, i, v i rækkefølge
     cleaned_message = re.sub(r'[^a-z]', '', message_lower)
     miv_count = cleaned_message.count('miv')
 
@@ -111,4 +124,7 @@ async def on_message(message):
 
 # Hent token sikkert fra Renders indstillinger
 TOKEN = os.environ.get("DISCORD_TOKEN")
-client.run(TOKEN)
+if TOKEN:
+    client.run(TOKEN)
+else:
+    print("FEJL: DISCORD_TOKEN miljøvariablen mangler på Render!")
