@@ -112,7 +112,7 @@ async def on_message(message):
             
         miv_history[user_id] = [t for t in miv_history[user_id] if current_time - t <= 5]
         
-        if len(miv_history[user_id]) > 3:
+        if len(miv_history[user_id]) > 1:
             await message.channel.send(f'{username} er en attention whore')
             return
 
