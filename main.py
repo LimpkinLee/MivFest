@@ -80,7 +80,7 @@ async def on_message(message):
         await message.channel.send(leaderboard_text)
         return
 
-    if "aldrig miv" or "ikke miv" in message_lower:
+    if "aldrig miv" in message_lower:
         current_count = stats[user_id]["count"]
         await message.channel.send(f'Editor's Note: {username} har in fact sagt miv {current_count} gang(e).')
         return
