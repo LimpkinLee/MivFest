@@ -1,3 +1,2 @@
-fastapi
-uvicorn
-pynacl
+discord.py
+psycopg2-binary
